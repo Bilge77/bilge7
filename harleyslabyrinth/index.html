@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bubble Match Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: #ffe6f0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    #startScreen {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #startScreen h2 {
+      font-size: 18px;
+      color: #d63384;
+    }
+    #startScreen button {
+      padding: 10px 20px;
+      background: #ff69b4;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    #gameCanvas {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    .bubble {
+      position: absolute;
+      font-size: 32px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .selected {
+      transform: scale(1.4);
+      border: 2px solid pink;
+      border-radius: 50%;
+    }
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #ff69b4;
+      z-index: 500;
+    }
+    .floatingHeart {
+      position: absolute;
+      font-size: 24px;
+      color: red;
+      animation: floatUp 2s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-100px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <h2>Hey baby girl I was thinking about how much I missed you and I wanted to make a game for you. A bubbles game. You need to match same symbols w each other to get points. Every balloon you couldn't pop gonna be -1 point for you. If you reach the right point u will earn an award ;)</h2>
+    <button onclick="startGame()">Play</button>
+  </div>
+  <div id="scoreBoard">Score: 0</div>
+  <div id="gameCanvas"></div>
+  <audio id="popSound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+  <script>
+    const symbols = ['🎀','💗','🌸','🩷','💖','✨'];
+    let selected = [];
+    let score = 0;
+    let interval;
+    const canvas = document.getElementById("gameCanvas");
+    const scoreBoard = document.getElementById("scoreBoard");
+    const popSound = document.getElementById("popSound");
+
+    function createBubble() {
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+      bubble.style.left = Math.random() * (window.innerWidth - 40) + "px";
+      bubble.style.top = "100vh";
+      canvas.appendChild(bubble);
+      let top = window.innerHeight;
+      const speed = 1 + Math.random() * 2 + score * 0.02;
+
+      const move = setInterval(() => {
+        top -= speed;
+        bubble.style.top = top + "px";
+        if (top < -40) {
+          clearInterval(move);
+          if (!bubble.classList.contains("popped")) {
+            canvas.removeChild(bubble);
+            score--;
+            updateScore();
+          }
+        }
+      }, 20);
+
+      bubble.onclick = () => selectBubble(bubble);
+    }
+
+    function selectBubble(bubble) {
+      if (selected.includes(bubble)) return;
+      bubble.classList.add("selected");
+      selected.push(bubble);
+      if (selected.length === 2) {
+        if (selected[0].innerText === selected[1].innerText) {
+          selected.forEach(b => {
+            b.classList.add("popped");
+            popSound.currentTime = 0;
+            popSound.play();
+            showHeart(b.offsetLeft, b.offsetTop);
+            canvas.removeChild(b);
+          });
+          score++;
+          updateScore();
+          checkMilestones();
+        } else {
+          selected.forEach(b => b.classList.remove("selected"));
+        }
+        selected = [];
+      }
+    }
+
+    function showHeart(x, y) {
+      const heart = document.createElement("div");
+      heart.className = "floatingHeart";
+      heart.innerText = "💖";
+      heart.style.left = x + "px";
+      heart.style.top = y + "px";
+      canvas.appendChild(heart);
+      setTimeout(() => canvas.removeChild(heart), 2000);
+    }
+
+    function updateScore() {
+      scoreBoard.innerText = `Score: ${score}`;
+    }
+
+    function checkMilestones() {
+      if (score === 7) alert("First step'i tamamladın yes baby");
+      else if (score === 77) {
+        for (let i = 0; i < 30; i++) {
+          setTimeout(() => showHeart(Math.random() * window.innerWidth, Math.random() * window.innerHeight), i * 100);
+        }
+      }
+      else if (score === 777) alert("I love you so so much");
+    }
+
+    function startGame() {
+      document.getElementById("startScreen").style.display = "none";
+      interval = setInterval(createBubble, 800);
+    }
+  </script>
+</body>
+</html>
